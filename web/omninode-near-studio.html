@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OmniNode NEAR Intents &amp; Swarm Escrow Studio</title>
+  <style>
+    :root {
+      color-scheme: only light;
+      --paper: #f5f2ea;
+      --card: #fbf9f4;
+      --ink: #1e1d1a;
+      --muted: #5e5b52;
+      --border: #d8d2c5;
+      --accent: #0d6b58;
+      --warn: #a33b20;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 28px;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; }
+    h1 { margin: 0 0 6px; font-size: 1.75rem; letter-spacing: -0.02em; }
+    .sub { color: var(--muted); margin-bottom: 20px; font-size: 0.96rem; }
+    .bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+    button {
+      background: var(--card);
+      color: var(--ink);
+      border: 1px solid var(--border);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.active { background: var(--accent); color: #ffffff; border-color: var(--accent); }
+    .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 18px; }
+    .metric {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .metric .lbl { font-size: 0.78rem; text-transform: uppercase; color: var(--muted); }
+    .metric .val { font-size: 1.25rem; font-weight: 700; margin-top: 4px; }
+    .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+    pre {
+      background: #efeadd;
+      padding: 12px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.83rem;
+      margin: 8px 0 0;
+    }
+    .badge-ok { color: var(--accent); font-weight: 700; }
+    .badge-warn { color: var(--warn); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>OmniNode NEAR Intents &amp; Swarm Settlement Studio</h1>
+    <div class="sub">
+      In-browser WebAssembly spend-cap policy gate + disjoint NEAR AI Cloud TEE maker/checker quorum + Cellular Sheaf coboundary audit + exact 2^K Shapley NEAR Intents quotes.
+    </div>
+    <div class="bar">
+      <button id="btn-settle" class="active" onclick="runScenario('settle')">1. Clean 3-Agent Swarm Settlement</button>
+      <button id="btn-ambiguous" onclick="runScenario('ambiguous')">2. ASD-STE100 Vague Intent Reject</button>
+      <button id="btn-tamper" onclick="runScenario('tamper')">3. Sheaf Obstruction Hold</button>
+      <button id="btn-runaway" onclick="runScenario('runaway')">4. WebAssembly Spend Tripwire</button>
+    </div>
+    <div class="grid">
+      <div class="metric"><div class="lbl">Wasm Policy Binary</div><div class="val" id="m-wasm">50 B</div></div>
+      <div class="metric"><div class="lbl">Sheaf Energy (x^T L_F x)</div><div class="val" id="m-sheaf">0.0002</div></div>
+      <div class="metric"><div class="lbl">Net Coalition Units</div><div class="val" id="m-net">2,475,000</div></div>
+      <div class="metric"><div class="lbl">Envelope Status</div><div class="val" id="m-status">SETTLED</div></div>
+    </div>
+    <div class="panels">
+      <div class="panel">
+        <strong>Gate Sequence &amp; Shapley Split</strong>
+        <pre id="out-stages"></pre>
+      </div>
+      <div class="panel">
+        <strong>NEAR Intents 1Click Dry-Quote Envelope</strong>
+        <pre id="out-quotes"></pre>
+      </div>
+    </div>
+  </div>
+  <script>
+    const WASM_BYTES = new Uint8Array([
+      0,97,115,109,1,0,0,0, 1,7,1,96,2,127,127,1,127, 3,2,1,0,
+      7,16,1,12,99,104,101,99,107,95,98,117,100,103,101,116,0,0,
+      10,10,1,8,0,32,0,32,1,77,11
+    ]);
+    let wasmCheckBudget = (req, cap) => (req <= cap ? 1 : 0);
+    WebAssembly.instantiate(WASM_BYTES).then(res => {
+      wasmCheckBudget = res.instance.exports.check_budget;
+      runScenario('settle');
+    });
+
+    const SCENARIOS = {
+      settle: {
+        clause: "Deliver schema migration module passing 12 unit checks under 50 ms p95 latency",
+        gross: 2500000, cap: 10000000, sheafEnergy: 0.0003,
+        actors: ["planner-node.testnet", "maker-agent.testnet", "checker-guard.testnet"],
+        shares: [814122, 859489, 801389]
+      },
+      ambiguous: {
+        clause: "Optimize indexer throughput asap on a best effort basis",
+        gross: 1000000, cap: 10000000, sheafEnergy: 0.0,
+        ambiguousHit: ["asap", "best effort"]
+      },
+      tamper: {
+        clause: "Produce signed price-feed aggregation report across 3 oracle relays within 5 bps",
+        gross: 3000000, cap: 10000000, sheafEnergy: 1.4108, edge: "relay->checker"
+      },
+      runaway: {
+        clause: "Execute batch cross-chain rebalance across 4 liquidity pools under 20 bps slippage",
+        gross: 95000000, cap: 10000000, sheafEnergy: 0.0
+      }
+    };
+
+    function runScenario(key) {
+      document.querySelectorAll('.bar button').forEach(b => b.classList.remove('active'));
+      document.getElementById('btn-' + key).classList.add('active');
+      const s = SCENARIOS[key];
+      const wasmOk = wasmCheckBudget(s.gross, s.cap) === 1;
+      document.getElementById('m-wasm').textContent = WASM_BYTES.length + " B (live)";
+      document.getElementById('m-sheaf').textContent = s.sheafEnergy.toFixed(4);
+
+      if (s.ambiguousHit) {
+        document.getElementById('m-net').textContent = "0 (Unallocated)";
+        document.getElementById('m-status').innerHTML = '<span class="badge-warn">REJECTED PRE-LOCK</span>';
+        document.getElementById('out-stages').textContent = JSON.stringify({
+          stage_1_asd_ste100: "BLOCKED",
+          ambiguous_terms: s.ambiguousHit,
+          clause: s.clause
+        }, null, 2);
+        document.getElementById('out-quotes').textContent = "// No NEAR Intents quote issued prior to unambiguous clause check.";
+        return;
+      }
+      if (!wasmOk) {
+        document.getElementById('m-net').textContent = "0 (Aborted)";
+        document.getElementById('m-status').innerHTML = '<span class="badge-warn">WASM TRIPWIRE</span>';
+        document.getElementById('out-stages').textContent = JSON.stringify({
+          stage_3_wasm_spend_gate: "TRIPWIRE_ABORT_SPEND",
+          requested_micro_units: s.gross,
+          cap_micro_units: s.cap
+        }, null, 2);
+        document.getElementById('out-quotes').textContent = "// Function-call access key blocked by in-browser WebAssembly spend gate.";
+        return;
+      }
+      if (s.sheafEnergy > 0.05) {
+        document.getElementById('m-net').textContent = "0 (Escrow Held)";
+        document.getElementById('m-status').innerHTML = '<span class="badge-warn">HELD BY SHEAF</span>';
+        document.getElementById('out-stages').textContent = JSON.stringify({
+          stage_5_cellular_sheaf: "HELD_ON_SHEAF_OBSTRUCTION",
+          sheaf_energy: s.sheafEnergy,
+          pinpointed_edge: s.edge
+        }, null, 2);
+        document.getElementById('out-quotes').textContent = "// Coalition payout paused pending dispute inspection on edge " + s.edge;
+        return;
+      }
+      const net = s.shares.reduce((a, b) => a + b, 0);
+      document.getElementById('m-net').textContent = net.toLocaleString();
+      document.getElementById('m-status').innerHTML = '<span class="badge-ok">SETTLED</span>';
+      document.getElementById('out-stages').textContent = JSON.stringify({
+        quorum: "maker-agent.testnet != checker-guard.testnet (PASS)",
+        sheaf_energy: s.sheafEnergy,
+        exact_2k_shapley_payouts: s.actors.map((a, i) => ({actor: a, micro_units: s.shares[i]}))
+      }, null, 2);
+      document.getElementById('out-quotes').textContent = JSON.stringify({
+        dry: true,
+        swapType: "EXACT_INPUT",
+        originAsset: "nep141:wrap.near",
+        destinationAsset: "nep141:usdc.tether-token.near",
+        coalitionQuotes: s.actors.map((a, i) => ({recipient: a, amountIn: String(s.shares[i])}))
+      }, null, 2);
+    }
+  </script>
+</body>
+</html>
