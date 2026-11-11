@@ -1,0 +1,141 @@
+{
+  "schema_id": "omninode.intent_quorum_grid.v1",
+  "generation": 1,
+  "parameters": [
+    {
+      "name": "platform_fee_bps",
+      "kind": "choice",
+      "choices": [
+        0,
+        50,
+        100,
+        150,
+        250
+      ],
+      "default": 100
+    },
+    {
+      "name": "sheaf_obstruction_limit",
+      "kind": "choice",
+      "choices": [
+        0.02,
+        0.05,
+        0.1,
+        0.2
+      ],
+      "default": 0.05
+    },
+    {
+      "name": "max_call_spend_micro_units",
+      "kind": "integer_range",
+      "low": 100000,
+      "high": 50000000,
+      "default": 10000000
+    },
+    {
+      "name": "require_disjoint_quorum",
+      "kind": "boolean",
+      "default": true
+    }
+  ],
+  "constraints": [
+    {
+      "id": "high_spend_requires_disjoint_quorum",
+      "when_param": "max_call_spend_micro_units",
+      "min_trigger": 1000000,
+      "require_param": "require_disjoint_quorum",
+      "require_equals": true
+    }
+  ],
+  "regime_cells": {
+    "default_swarm_settlement": {
+      "cell_id": "cell_near_swarm_g1",
+      "platform_fee_bps": 100,
+      "sheaf_obstruction_limit": 0.05,
+      "max_call_spend_micro_units": 10000000,
+      "require_disjoint_quorum": true
+    }
+  },
+  "operational_constants": {
+    "bps_denominator": 10000,
+    "synergy_bonus_scale": 0.1,
+    "numerical_eps": 1e-12,
+    "expansion_num": 3,
+    "expansion_den": 2,
+    "saturation_ratio": 0.95,
+    "slippage_bps_default": 50,
+    "quote_ttl_seconds": 120,
+    "http_timeout_seconds": 10,
+    "http_ok_min": 200,
+    "http_ok_max": 299,
+    "min_clause_words": 4,
+    "wasm_policy_bytes": [
+      0,
+      97,
+      115,
+      109,
+      1,
+      0,
+      0,
+      0,
+      1,
+      7,
+      1,
+      96,
+      2,
+      127,
+      127,
+      1,
+      127,
+      3,
+      2,
+      1,
+      0,
+      7,
+      16,
+      1,
+      12,
+      99,
+      104,
+      101,
+      99,
+      107,
+      95,
+      98,
+      117,
+      100,
+      103,
+      101,
+      116,
+      0,
+      0,
+      10,
+      10,
+      1,
+      8,
+      0,
+      32,
+      0,
+      32,
+      1,
+      77,
+      11
+    ]
+  },
+  "ambiguous_phrases": [
+    "asap",
+    "best effort",
+    "tbd",
+    "approximately",
+    "whenever possible",
+    "reasonable effort"
+  ],
+  "near_endpoints": {
+    "near_testnet_rpc": "https://rpc.testnet.near.org",
+    "near_ai_cloud_url": "https://cloud-api.near.ai/v1/chat/completions",
+    "near_intents_quote_url": "https://1click.chaindefuser.com/v0/quote",
+    "default_origin_asset": "nep141:wrap.near",
+    "default_dest_asset": "nep141:usdc.tether-token.near",
+    "default_tee_model": "deepseek-ai/DeepSeek-V3.1"
+  }
+}
