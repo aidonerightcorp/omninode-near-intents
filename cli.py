@@ -87,18 +87,39 @@ def main() -> None:
       choices=["settle", "ambiguous", "tamper", "runaway", "all"],
       default="all",
   )
+  parser.add_argument(
+      "--live-readonly-check",
+      action="store_true",
+      help="Fetch live zero-spend cross-chain asset metadata from 1Click API and live NEAR Mainnet/Testnet RPC status.",
+  )
+  parser.add_argument(
+      "--save-probe",
+      default="",
+      help="Optional relative or absolute file path to write the JSON output.",
+  )
   args = parser.parse_args()
 
   root = pathlib.Path(__file__).resolve().parent
   grid = NodeGrid.from_json(root / "config" / "intent_quorum_grid.json")
   coord = OmniNodeNearSettlementCoordinator(grid)
-  scenarios = build_scenarios()
 
-  if args.scenario == "all":
-    out = {name: coord.execute_intent_envelope(env) for name, env in scenarios.items()}
+  if args.live_readonly_check:
+    out: object = coord.readonly_probe.run_live_readonly_check()
   else:
-    out = coord.execute_intent_envelope(scenarios[args.scenario])
-  print(json.dumps(out, indent=2))
+    scenarios = build_scenarios()
+    if args.scenario == "all":
+      out = {name: coord.execute_intent_envelope(env) for name, env in scenarios.items()}
+    else:
+      out = coord.execute_intent_envelope(scenarios[args.scenario])
+
+  rendered = json.dumps(out, indent=2)
+  if args.save_probe:
+    target = pathlib.Path(args.save_probe)
+    if not target.is_absolute():
+      target = root / target
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(rendered + "\n", encoding="utf-8")
+  print(rendered)
 
 
 if __name__ == "__main__":

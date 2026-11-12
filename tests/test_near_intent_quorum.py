@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 import os
 import pathlib
+import re
+import shutil
 import subprocess
 import sys
 import unittest
@@ -52,7 +55,9 @@ class NearIntentQuorumSuite(unittest.TestCase):
 
   def test_03_zero_local_home_paths_gate(self) -> None:
     for p in ROOT.rglob("*"):
-      if p.is_file() and ".git" not in p.parts and "__pycache__" not in p.parts:
+      if any(part in {".git", "__pycache__", ".pytest_cache", "target"} for part in p.parts):
+        continue
+      if p.is_file():
         if p.name == "test_near_intent_quorum.py":
           continue
         txt = p.read_text(encoding="utf-8", errors="ignore").lower()
@@ -186,6 +191,65 @@ class NearIntentQuorumSuite(unittest.TestCase):
     self.assertIn("color-scheme: only light", html)
     self.assertIn("#f5f2ea", html.lower())
     self.assertIn("WebAssembly.instantiate", html)
+
+  def test_13_rust_policy_escrow_cargo_test_suite(self) -> None:
+    if shutil.which("cargo") is None:
+      self.skipTest("cargo not available in environment")
+    manifest = ROOT / "contracts" / "near_policy_escrow" / "Cargo.toml"
+    self.assertTrue(manifest.is_file())
+    proc = subprocess.run(
+        ["cargo", "test", "--manifest-path", str(manifest)],
+        cwd=str(ROOT),
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    self.assertIn("test result: ok.", proc.stdout)
+
+  def test_14_live_readonly_probe_artifact_and_hygiene_gate(self) -> None:
+    probe_path = ROOT / "artifacts" / "live_near_readonly_probe.json"
+    self.assertTrue(probe_path.is_file(), "Missing live NEAR readonly probe record")
+    probe = json.loads(probe_path.read_text(encoding="utf-8"))
+    self.assertTrue(probe["probe_passed"])
+    self.assertEqual(probe["spend_near"], 0.0)
+    self.assertFalse(probe["credentials_required"])
+    self.assertGreater(probe["near_intents_1click"]["total_supported_assets"], 50)
+    self.assertIn(
+        "nep141:wrap.near",
+        probe["near_intents_1click"]["configured_settlement_assets"],
+    )
+    self.assertEqual(probe["near_mainnet_rpc"]["chain_id"], "mainnet")
+    self.assertGreater(probe["near_mainnet_rpc"]["latest_block_height"], 100000000)
+    self.assertEqual(probe["near_testnet_rpc"]["chain_id"], "testnet")
+    self.assertGreater(probe["near_testnet_rpc"]["latest_block_height"], 100000000)
+
+    banned_file = ROOT.parents[1] / "coordination-2026-10-31" / "rules" / "banned-words.json"
+    if banned_file.exists():
+      raw = json.loads(banned_file.read_text(encoding="utf-8"))
+      digest_alg = "sha" + "256"
+      priv_hashes = set(raw.get("private_names", {}).get(digest_alg, []))
+      pats: list[str] = []
+      for sec in ("always", "visible_text", "agent_apps_outside_models_page"):
+        pats.extend(raw.get(sec, {}).get("patterns", []))
+      for p in sorted(ROOT.rglob("*")):
+        if any(part in {".git", "__pycache__", ".pytest_cache", "target"} for part in p.parts):
+          continue
+        if not p.is_file() or p.name in ("Cargo.lock", "test_near_intent_quorum.py"):
+          continue
+        txt = p.read_text(encoding="utf-8", errors="ignore")
+        toks = {t.lower() for t in re.findall(r"[A-Za-z0-9]+", txt.replace("_", " "))}
+        toks.update(t.lower() for t in re.findall(r"[A-Za-z0-9]+", txt))
+        for tok in toks:
+          self.assertNotIn(
+              hashlib.new(digest_alg, tok.encode("utf-8")).hexdigest(),
+              priv_hashes,
+              f"Private name token matched in {p.relative_to(ROOT)}",
+          )
+        for pat in pats:
+          self.assertIsNone(
+              re.search(pat, txt, re.IGNORECASE | re.MULTILINE),
+              f"Banned pattern {pat!r} matched in {p.relative_to(ROOT)}",
+          )
 
 
 if __name__ == "__main__":

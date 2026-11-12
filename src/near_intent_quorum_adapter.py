@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import datetime
 import json
 import os
+import string
 import urllib.request
 from typing import Any
 
@@ -139,6 +141,138 @@ class NearAiCloudTeeQuorum:
     }
 
 
+class NearReadonlyNetworkProbe:
+  """Zero-key, zero-spend read-only probe against live NEAR Intents 1Click & NEAR RPCs."""
+
+  def __init__(self, endpoints: dict[str, str], constants: dict[str, Any]):
+    self.endpoints = endpoints
+    self.constants = constants
+
+  def _rpc_call(self, rpc_url: str, method: str, params: Any) -> dict[str, Any]:
+    timeout_s = int(self.constants["http_timeout_seconds"])
+    body = json.dumps({
+        "jsonrpc": "2.0",
+        "id": "omninode-readonly-probe",
+        "method": method,
+        "params": params,
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        rpc_url,
+        data=body,
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "omninode-near-intents/1.1.0",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=timeout_s) as resp:
+      status_code = int(getattr(resp, "status", self.constants["http_ok_min"]))
+      doc = json.loads(resp.read().decode("utf-8"))
+    return {"http_status": status_code, "result": doc.get("result", {})}
+
+  def _probe_network_rpc(self, rpc_url: str) -> dict[str, Any]:
+    status_res = self._rpc_call(rpc_url, "status", [])
+    gas_res = self._rpc_call(rpc_url, "gas_price", [None])
+    s_doc = status_res["result"]
+    sync = s_doc.get("sync_info", {})
+    return {
+        "rpc_url": rpc_url,
+        "http_status": status_res["http_status"],
+        "chain_id": str(s_doc.get("chain_id", "")),
+        "protocol_version": int(s_doc.get("protocol_version", 0)),
+        "latest_block_height": int(sync.get("latest_block_height", 0)),
+        "latest_block_hash_b58": str(sync.get("latest_block_hash", "")),
+        "latest_block_time": str(sync.get("latest_block_time", "")),
+        "syncing": bool(sync.get("syncing", False)),
+        "gas_price_yoctonear": str(gas_res["result"].get("gas_price", "")),
+    }
+
+  def run_live_readonly_check(self) -> dict[str, Any]:
+    timeout_s = int(self.constants["http_timeout_seconds"])
+    sample_limit = int(self.constants["readonly_sample_assets_limit"])
+    tokens_url = self.endpoints["near_intents_tokens_url"]
+    tok_req = urllib.request.Request(
+        tokens_url,
+        headers={
+            "Accept": "application/json",
+            "User-Agent": "omninode-near-intents/1.1.0",
+        },
+        method="GET",
+    )
+    with urllib.request.urlopen(tok_req, timeout=timeout_s) as resp:
+      tok_http = int(getattr(resp, "status", self.constants["http_ok_min"]))
+      tokens_raw = json.loads(resp.read().decode("utf-8"))
+
+    chains: set[str] = set()
+    near_nep141_assets: list[dict[str, Any]] = []
+    default_orig = self.endpoints["default_origin_asset"]
+    default_dest = self.endpoints["default_dest_asset"]
+    matched_defaults: dict[str, dict[str, Any]] = {}
+
+    price_decimals = int(self.constants["readonly_price_decimals"])
+    for item in tokens_raw:
+      chain = str(item.get("blockchain", ""))
+      if chain:
+        chains.add(chain)
+      asset_id = str(item.get("assetId", ""))
+      raw_price = item.get("price")
+      rounded_price = (
+          round(float(raw_price), price_decimals) if raw_price is not None else None
+      )
+      summary = {
+          "assetId": asset_id,
+          "symbol": str(item.get("symbol", "")),
+          "blockchain": chain,
+          "decimals": int(item.get("decimals", 0)),
+          "price_usd": rounded_price,
+          "priceUpdatedAt": str(item.get("priceUpdatedAt", "")),
+      }
+      if asset_id in (default_orig, default_dest):
+        matched_defaults[asset_id] = summary
+      has_hex_sub = any(
+          len(seg) > sample_limit and all(ch in string.hexdigits for ch in seg)
+          for seg in asset_id.replace(":", ".").split(".")
+      )
+      if (
+          chain == "near"
+          and asset_id.startswith("nep141:")
+          and asset_id.endswith(".near")
+          and not has_hex_sub
+          and len(near_nep141_assets) < sample_limit
+      ):
+        near_nep141_assets.append(summary)
+
+    mainnet_status = self._probe_network_rpc(self.endpoints["near_mainnet_rpc"])
+    testnet_status = self._probe_network_rpc(self.endpoints["near_testnet_rpc"])
+
+    ok_min = int(self.constants["http_ok_min"])
+    ok_max = int(self.constants["http_ok_max"])
+    all_http_ok = (
+        ok_min <= tok_http <= ok_max
+        and ok_min <= int(mainnet_status["http_status"]) <= ok_max
+        and ok_min <= int(testnet_status["http_status"]) <= ok_max
+    )
+    return {
+        "schema": "omninode.near_readonly_live_probe.v1",
+        "mode": "live_zero_spend_readonly",
+        "captured_at_utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+        "probe_passed": bool(all_http_ok and len(tokens_raw) > 0 and mainnet_status["latest_block_height"] > 0),
+        "spend_near": 0.0,
+        "credentials_required": False,
+        "near_intents_1click": {
+            "endpoint": tokens_url,
+            "http_status": tok_http,
+            "total_supported_assets": len(tokens_raw),
+            "distinct_blockchains_count": len(chains),
+            "supported_blockchains": sorted(chains),
+            "configured_settlement_assets": matched_defaults,
+            "near_nep141_sample": near_nep141_assets,
+        },
+        "near_mainnet_rpc": mainnet_status,
+        "near_testnet_rpc": testnet_status,
+    }
+
+
 class OmniNodeNearSettlementCoordinator:
   """End-to-end NEAR Swarm Intent, Spend-Policy, Sheaf Audit, and Shapley Coordinator."""
 
@@ -151,6 +285,7 @@ class OmniNodeNearSettlementCoordinator:
     self.shapley = ExactShapleyCoalitionSplitter(grid.constants)
     self.intents = NearIntentsQuoteAdapter(grid.near_endpoints, grid.constants)
     self.tee_quorum = NearAiCloudTeeQuorum(grid.near_endpoints, grid.constants)
+    self.readonly_probe = NearReadonlyNetworkProbe(grid.near_endpoints, grid.constants)
 
   def execute_intent_envelope(self, envelope: dict[str, Any]) -> dict[str, Any]:
     cell = self.grid.resolve_cell()

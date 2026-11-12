@@ -1,6 +1,5 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
-.env
-dist/
+contracts/near_policy_escrow/target/
 target/

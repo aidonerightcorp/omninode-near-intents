@@ -1,0 +1,17 @@
+[package]
+name = "near_policy_escrow"
+version = "1.1.0"
+edition = "2021"
+license = "MIT"
+description = "Disjoint Maker-Checker Policy Escrow & Exact Coalition Settlement State Machine for NEAR"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = true

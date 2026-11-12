@@ -69,6 +69,8 @@
     "http_ok_min": 200,
     "http_ok_max": 299,
     "min_clause_words": 4,
+    "readonly_sample_assets_limit": 8,
+    "readonly_price_decimals": 8,
     "wasm_policy_bytes": [
       0,
       97,
@@ -131,9 +133,11 @@
     "reasonable effort"
   ],
   "near_endpoints": {
+    "near_mainnet_rpc": "https://rpc.mainnet.near.org",
     "near_testnet_rpc": "https://rpc.testnet.near.org",
     "near_ai_cloud_url": "https://cloud-api.near.ai/v1/chat/completions",
     "near_intents_quote_url": "https://1click.chaindefuser.com/v0/quote",
+    "near_intents_tokens_url": "https://1click.chaindefuser.com/v0/tokens",
     "default_origin_asset": "nep141:wrap.near",
     "default_dest_asset": "nep141:usdc.tether-token.near",
     "default_tee_model": "deepseek-ai/DeepSeek-V3.1"

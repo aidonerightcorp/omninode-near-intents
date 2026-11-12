@@ -1,0 +1,153 @@
+{
+  "schema": "omninode.near_readonly_live_probe.v1",
+  "mode": "live_zero_spend_readonly",
+  "captured_at_utc": "2026-11-12T21:55:15.004150+00:00",
+  "probe_passed": true,
+  "spend_near": 0.0,
+  "credentials_required": false,
+  "near_intents_1click": {
+    "endpoint": "https://1click.chaindefuser.com/v0/tokens",
+    "http_status": 200,
+    "total_supported_assets": 230,
+    "distinct_blockchains_count": 39,
+    "supported_blockchains": [
+      "abs",
+      "adi",
+      "aleo",
+      "aptos",
+      "arb",
+      "avax",
+      "base",
+      "bch",
+      "bera",
+      "bsc",
+      "btc",
+      "cardano",
+      "dash",
+      "doge",
+      "eth",
+      "fogo",
+      "gnosis",
+      "hood",
+      "hypercore",
+      "ltc",
+      "miden",
+      "monad",
+      "movement",
+      "near",
+      "op",
+      "plasma",
+      "pol",
+      "prl",
+      "qtc",
+      "scroll",
+      "sol",
+      "starknet",
+      "stellar",
+      "sui",
+      "ton",
+      "tron",
+      "xlayer",
+      "xrp",
+      "zec"
+    ],
+    "configured_settlement_assets": {
+      "nep141:wrap.near": {
+        "assetId": "nep141:wrap.near",
+        "symbol": "wNEAR",
+        "blockchain": "near",
+        "decimals": 24,
+        "price_usd": 3.43,
+        "priceUpdatedAt": "2026-11-12T21:54:30.941Z"
+      }
+    },
+    "near_nep141_sample": [
+      {
+        "assetId": "nep141:wrap.near",
+        "symbol": "wNEAR",
+        "blockchain": "near",
+        "decimals": 24,
+        "price_usd": 3.43,
+        "priceUpdatedAt": "2026-11-12T21:54:30.941Z"
+      },
+      {
+        "assetId": "nep141:eth.bridge.near",
+        "symbol": "ETH",
+        "blockchain": "near",
+        "decimals": 18,
+        "price_usd": 2016.6,
+        "priceUpdatedAt": "2026-11-12T21:54:30.941Z"
+      },
+      {
+        "assetId": "nep141:blackdragon.tkn.near",
+        "symbol": "BLACKDRAGON",
+        "blockchain": "near",
+        "decimals": 24,
+        "price_usd": 1e-08,
+        "priceUpdatedAt": "2026-11-12T21:54:30.941Z"
+      },
+      {
+        "assetId": "nep141:token.0xshitzu.near",
+        "symbol": "SHITZU",
+        "blockchain": "near",
+        "decimals": 18,
+        "price_usd": 0.00137204,
+        "priceUpdatedAt": "2026-11-12T21:54:30.941Z"
+      },
+      {
+        "assetId": "nep141:abg-966.meme-cooking.near",
+        "symbol": "ABG",
+        "blockchain": "near",
+        "decimals": 18,
+        "price_usd": 0.0,
+        "priceUpdatedAt": "2026-11-12T17:53:00.982Z"
+      },
+      {
+        "assetId": "nep141:noear-324.meme-cooking.near",
+        "symbol": "NOEAR",
+        "blockchain": "near",
+        "decimals": 18,
+        "price_usd": 0.0,
+        "priceUpdatedAt": "2026-11-12T17:53:00.982Z"
+      },
+      {
+        "assetId": "nep141:mpdao-token.near",
+        "symbol": "mpDAO",
+        "blockchain": "near",
+        "decimals": 6,
+        "price_usd": 0.00837718,
+        "priceUpdatedAt": "2026-11-12T21:54:30.941Z"
+      },
+      {
+        "assetId": "nep141:jambo-1679.meme-cooking.near",
+        "symbol": "JAMBO",
+        "blockchain": "near",
+        "decimals": 18,
+        "price_usd": 0.00018349,
+        "priceUpdatedAt": "2026-11-12T21:54:30.941Z"
+      }
+    ]
+  },
+  "near_mainnet_rpc": {
+    "rpc_url": "https://rpc.mainnet.near.org",
+    "http_status": 200,
+    "chain_id": "mainnet",
+    "protocol_version": 88,
+    "latest_block_height": 224271959,
+    "latest_block_hash_b58": "FtzpHGp4AfcPPbrDineX7nYvbAs3vLGDmV9GieLpF9St",
+    "latest_block_time": "2026-11-12T21:55:03.992290033Z",
+    "syncing": false,
+    "gas_price_yoctonear": "100000000"
+  },
+  "near_testnet_rpc": {
+    "rpc_url": "https://rpc.testnet.near.org",
+    "http_status": 200,
+    "chain_id": "testnet",
+    "protocol_version": 88,
+    "latest_block_height": 277421241,
+    "latest_block_hash_b58": "AwsFfi4nq975G1BD7sCr22F67SNQ22CC322h1ZAX1tsQ",
+    "latest_block_time": "2026-11-12T21:55:10.548185082Z",
+    "syncing": false,
+    "gas_price_yoctonear": "100000000"
+  }
+}
